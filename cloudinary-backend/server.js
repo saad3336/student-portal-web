@@ -26,7 +26,7 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
   'http://localhost:3000',      // Common development port for React/Vue/Angular
   'http://localhost:5173',      // Common development port for Vite
-  'https://your-netlify-site.netlify.app', // ✨ REPLACE THIS WITH YOUR ACTUAL NETLIFY SITE'S LIVE URL ✨
+  'https://biit-bscs-ai.netlify.app/', // ✨ REPLACE THIS WITH YOUR ACTUAL NETLIFY SITE'S LIVE URL ✨
   // Example if your Netlify site URL is 'https://my-awesome-school-app.netlify.app':
   // 'https://my-awesome-school-app.netlify.app',
   // If you are using a custom domain for your Netlify frontend, add it here too:
