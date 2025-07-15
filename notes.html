@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notes | Study Vault</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <style>
+        :root {
+            --primary-color: #2DD4BF;
+            --background-color: #111827;
+            --card-background: #1F2937;
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --border-color: #374151;
+            --hover-color: #374151;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            padding-bottom: 100px;
+        }
+        .header {
+            background-color: var(--card-background);
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .header h1 { font-size: 24px; font-weight: 600; }
+        .main-content { padding: 25px; }
+        .accordion-item {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .accordion-header h2 { font-size: 18px; font-weight: 600; }
+        .accordion-header .icon { font-size: 24px; transition: transform 0.3s ease; }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+        }
+        .accordion-item.active .accordion-header .icon { transform: rotate(90deg); }
+        .accordion-item.active .accordion-content {
+            max-height: 500px; /* Adjust as needed */
+            padding: 0 5px 5px 5px;
+        }
+        .note-list { list-style: none; padding: 0; margin: 0; }
+        .note-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: inherit;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .note-item:hover {
+            background-color: var(--hover-color);
+        }
+        .note-icon { font-size: 24px; color: var(--primary-color); margin-right: 15px; }
+        .note-details { flex-grow: 1; }
+        .note-details p { font-weight: 500; margin: 0; }
+        .note-details span { font-size: 12px; color: var(--text-secondary); }
+        .no-notes { color: var(--text-secondary); padding: 20px; text-align: center; }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: var(--card-background);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+        }
+        .nav-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+        .nav-link i { font-size: 24px; }
+        .nav-link span { font-size: 12px; margin-top: 5px; }
+        .nav-link.active, .nav-link:hover { color: var(--primary-color); }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h1>Notes</h1>
+    </header>
+
+    <main class="main-content">
+        <div id="accordion-container"></div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-link">
+            <i class='bx bxs-dashboard'></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="assignments.html" class="nav-link">
+            <i class='bx bx-briefcase-alt'></i>
+            <span>Assignments</span>
+        </a>
+        <a href="timetable.html" class="nav-link">
+            <i class='bx bx-calendar'></i>
+            <span>Timetable</span>
+        </a>
+        <a href="quiz.html" class="nav-link">
+            <i class='bx bx-edit'></i>
+            <span>Quizzes</span>
+        </a>
+        <a href="notes.html" class="nav-link active">
+            <i class='bx bxs-notepad'></i>
+            <span>Notes</span>
+        </a>
+        <a href="admin.html" class="nav-link">
+            <i class='bx bxs-shield'></i>
+            <span>Admin</span>
+        </a>
+    </nav>
+
+    <script>
+        const subjects = ["math", "science", "history", "english", "art"]; // Define your subjects for notes
+        const accordionContainer = document.getElementById("accordion-container");
+
+        subjects.forEach(subject => {
+            const capitalized = subject.charAt(0).toUpperCase() + subject.slice(1);
+            const item = document.createElement('div');
+            item.className = 'accordion-item';
+            item.innerHTML = `
+                <div class="accordion-header" data-subject="${subject}">
+                    <h2>${capitalized}</h2>
+                    <i class='bx bx-chevron-right icon'></i>
+                </div>
+                <div class="accordion-content"></div>
+            `;
+            accordionContainer.appendChild(item);
+        });
+
+        // ✨ IMPORTANT FIX: Changed the port to 3005 to match the updated notes server
+        fetch("http://localhost:3005/api/notes") 
+            .then(res => {
+                // Check if the response was successful (status 200-299)
+                if (!res.ok) {
+                    // If the server explicitly says no notes found (e.g., a custom 404), handle it
+                    if (res.status === 404) {
+                        throw new Error('No notes found in the specified folder on Cloudinary.');
+                    }
+                    // For other non-OK statuses, throw a generic HTTP error
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                // If successful, parse the response as JSON
+                return res.json();
+            })
+            .then(data => {
+                const grouped = {};
+                // Ensure data is an array before attempting to iterate
+                if (Array.isArray(data)) {
+                    data.forEach(file => {
+                        // Assuming your public_id for notes will be like "notes/subject/filename"
+                        const match = file.public_id.match(/notes\/(\w+)\//);
+                        if (match) {
+                            const subject = match[1];
+                            if (!grouped[subject]) grouped[subject] = [];
+                            grouped[subject].push(file);
+                        }
+                    });
+                } else {
+                    // If data is not an array, it's an unexpected format
+                    console.warn("Received data is not an array:", data);
+                    throw new Error("Unexpected data format from server.");
+                }
+
+                document.querySelectorAll(".accordion-header").forEach(header => {
+                    header.addEventListener("click", () => {
+                        const item = header.parentElement;
+                        const contentDiv = item.querySelector('.accordion-content');
+                        const subject = header.dataset.subject;
+
+                        item.classList.toggle("active");
+
+                        if (item.classList.contains("active")) {
+                            contentDiv.innerHTML = ""; // Clear previous content
+
+                            const notes = grouped[subject] || [];
+                            if (notes.length === 0) {
+                                contentDiv.innerHTML = '<p class="no-notes">No notes found for this subject.</p>';
+                                return;
+                            }
+
+                            const list = document.createElement('ul');
+                            list.className = 'note-list';
+
+                            notes.forEach(file => {
+                                const date = new Date(file.created_at).toLocaleDateString('en-US', {
+                                    year: 'numeric', month: 'long', day: 'numeric'
+                                });
+
+                                // Prioritize original_filename, then display_name, then filename, then public_id
+                                const filename = file.original_filename || file.display_name || file.filename || file.public_id.split('/').pop();
+                                const viewUrl = file.secure_url;
+
+                                const a = document.createElement('a');
+                                a.className = 'note-item';
+                                a.href = viewUrl;
+                                a.target = "_blank"; // Open in a new tab
+                                a.rel = "noopener noreferrer";
+
+                                a.innerHTML = `
+                                    <i class='bx bxs-notepad note-icon'></i>
+                                    <div class="note-details">
+                                        <p>${filename}</p>
+                                        <span>Available: ${date}</span>
+                                    </div>
+                                `;
+
+                                const li = document.createElement('li');
+                                li.appendChild(a);
+                                list.appendChild(li);
+                            });
+
+                            contentDiv.appendChild(list);
+                        }
+                    });
+                });
+            })
+            .catch(err => {
+                console.error("❌ Error loading notes:", err);
+                let errorMessage = 'Error loading notes. Please ensure the notes server is running and notes are uploaded to Cloudinary.';
+                if (err.message.includes('No notes found')) {
+                    errorMessage = 'No notes found for this category. Please upload notes to Cloudinary.';
+                } else if (err.message.includes('HTTP error! status: 404')) {
+                    errorMessage = 'Notes not found. Check if documents are uploaded to the correct Cloudinary folder for notes.';
+                } else if (err.message.includes('Unexpected data format')) {
+                    errorMessage = 'Received unexpected data from the server. Please check server logs.';
+                }
+                accordionContainer.innerHTML = `<p class="no-notes">${errorMessage}</p>`;
+            });
+    </script>
+
+</body>
+</html>

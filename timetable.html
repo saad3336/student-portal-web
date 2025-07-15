@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Timetable | Study Vault</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <style>
+        :root {
+            --primary-color: #2DD4BF;
+            --background-color: #111827;
+            --card-background: #1F2937;
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --border-color: #374151;
+            --hover-color: #374151;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            padding-bottom: 100px;
+        }
+        .header {
+            background-color: var(--card-background);
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .header h1 { font-size: 24px; font-weight: 600; }
+        .main-content { padding: 25px; }
+
+        /* Styles for the timetable container */
+        .timetable-list { /* New container for multiple items */
+            display: grid;
+            gap: 15px; /* Spacing between timetable items */
+        }
+        .timetable-item { /* Renamed wrapper to item for clarity */
+            background-color: var(--card-background);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .timetable-info {
+            margin-bottom: 20px;
+        }
+        .timetable-info p {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        .timetable-info span {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .error-message {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px;
+        }
+        
+        /* Styles for the view button */
+        .view-button-container {
+            text-align: center;
+            padding-top: 10px;
+        }
+        .view-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border-radius: 12px;
+            background-color: var(--primary-color);
+            color: var(--background-color);
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        .view-button i {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+        .view-button:hover {
+            background-color: #26a28d;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: var(--card-background);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+        }
+        .nav-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+        .nav-link i { font-size: 24px; }
+        .nav-link span { font-size: 12px; margin-top: 5px; }
+        .nav-link.active, .nav-link:hover { color: var(--primary-color); }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Timetable</h1>
+    </header>
+
+    <main class="main-content">
+        <div id="timetable-container">
+            <!-- Timetable documents will be loaded here -->
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-link">
+            <i class='bx bxs-dashboard'></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="assignments.html" class="nav-link">
+            <i class='bx bx-briefcase-alt'></i>
+            <span>Assignments</span>
+        </a>
+        <a href="timetable.html" class="nav-link active">
+            <i class='bx bx-calendar'></i>
+            <span>Timetable</span>
+        </a>
+        <a href="quiz.html" class="nav-link">
+            <i class='bx bx-edit'></i>
+            <span>Quizzes</span>
+        </a>
+           <a href="notes.html" class="nav-link">
+            <i class='bx bxs-notepad'></i>
+            <span>Notes</span>
+        </a>
+        <a href="admin.html" class="nav-link">
+            <i class='bx bxs-shield'></i>
+            <span>Admin</span>
+        </a>
+    </nav>
+
+    <script>
+        const timetableContainer = document.getElementById("timetable-container");
+
+        fetch("http://localhost:3002/api/timetable") // Ensure this port matches your server
+            .then(res => {
+                if (!res.ok) {
+                    // If the server explicitly says no document found (404), handle it gracefully
+                    if (res.status === 404) {
+                        throw new Error('No timetable documents found in the specified folder.');
+                    }
+                    throw new Error(`HTTP error! Status: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(data => {
+                // Check if data is an array and not empty
+                if (Array.isArray(data) && data.length > 0) {
+                    timetableContainer.innerHTML = ''; // Clear previous content
+
+                    const timetableList = document.createElement('div');
+                    timetableList.className = 'timetable-list'; // New class for the grid layout
+
+                    data.forEach(file => { // Iterate over each file in the array
+                        if (file && file.secure_url) {
+                            const timetableItem = document.createElement('div'); // Renamed wrapper to item
+                            timetableItem.className = 'timetable-item';
+
+                            // Display filename and creation date
+                            const infoDiv = document.createElement('div');
+                            infoDiv.className = 'timetable-info';
+                            // ✨ FIX: Prioritize original_filename, then display_name, then filename, then public_id
+                            const filename = file.original_filename || file.display_name || file.filename || file.public_id.split('/').pop(); 
+                            const date = new Date(file.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric', month: 'long', day: 'numeric'
+                            });
+                            infoDiv.innerHTML = `<p>${filename}</p><span>Uploaded: ${date}</span>`;
+                            timetableItem.appendChild(infoDiv);
+
+                            // Create and display the view button for the document
+                            const viewContainer = document.createElement('div'); 
+                            viewContainer.className = 'view-button-container';
+
+                            const viewLink = document.createElement('a'); 
+                            viewLink.className = 'view-button';
+                            viewLink.href = file.secure_url; // Use the secure_url for this specific file
+                            viewLink.target = '_blank';
+                            viewLink.rel = "noopener noreferrer";
+
+                            viewLink.innerHTML = `<i class='bx bx-file-blank'></i> View Document`; // Generic text
+
+                            viewContainer.appendChild(viewLink);
+                            timetableItem.appendChild(viewContainer);
+                            
+                            timetableList.appendChild(timetableItem); // Add item to the list container
+                        }
+                    });
+                    timetableContainer.appendChild(timetableList); // Add the list to the main container
+
+                } else {
+                    // If data is empty or not an array, show no documents message
+                    throw new Error('No timetable documents found in the response.');
+                }
+            })
+            .catch(err => {
+                console.error("❌ Error loading timetable:", err);
+                let errorMessage = 'Could not load timetable. Please ensure the server is running and timetable documents are uploaded to Cloudinary.';
+                if (err.message.includes('No timetable documents found')) {
+                    errorMessage = 'No timetable documents found. Please upload your timetable (.docx, .pdf, etc.) to Cloudinary.';
+                } else if (err.message.includes('HTTP error! Status: 404')) {
+                    errorMessage = 'Timetable not found. Check if documents are uploaded to the correct Cloudinary folder.';
+                }
+                timetableContainer.innerHTML = `<div class="timetable-item"><p class="error-message">${errorMessage}</p></div>`; // Changed wrapper to item
+            });
+    </script>
+</body>
+</html>
